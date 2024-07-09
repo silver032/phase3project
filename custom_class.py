@@ -66,7 +66,7 @@ class CustomCrossValidator:
         
         return metrics
     
-    def cross_validate(self, folds=5):
+    def cross_validate(self, features, folds=5):
         kfold = StratifiedKFold(n_splits=folds)
         scores = []
         
@@ -75,6 +75,11 @@ class CustomCrossValidator:
             y_train, y_val = self.y.iloc[train_idx], self.y.iloc[val_idx]
             
             X_train_scaled, X_val_scaled = self._preprocess_data(X_train, X_val)
+
+            # Select specified features if provided, otherwise use all features
+            if features is not None:
+                X_train = X_train[features]
+                X_val = X_val[features]
             
             metrics = self._evaluate_model(self.model, X_train_scaled, y_train, X_val_scaled, y_val)
             scores.append(metrics)
