@@ -20,7 +20,7 @@ class CustomCrossValidator:
         # Perform OneHotEncoding on categorical columns in X_train and X_val
         categorical_columns = X_train.select_dtypes(include=['object', 'category']).columns.tolist()
         if categorical_columns:
-            encoder = OneHotEncoder(sparse=False, drop='first')
+            encoder = OneHotEncoder(sparse=False, handle_unknown='ignore')
             X_train_encoded = encoder.fit_transform(X_train[categorical_columns])
             X_val_encoded = encoder.transform(X_val[categorical_columns])
             
@@ -66,7 +66,7 @@ class CustomCrossValidator:
         
         return metrics
     
-    def cross_validate(self, features, folds=5):
+    def cross_validate(self, features=None, folds=5):
         kfold = StratifiedKFold(n_splits=folds)
         scores = []
         
