@@ -11,24 +11,42 @@ def split_data(df, target, test_size=0.30, random_state=42):
 def scale_numeric_features(X_train, X_test):
     numeric_features = X_train.select_dtypes(include=['int64', 'float64']).columns
     scaler = StandardScaler()
+    
+    # Fit and transform on training data
     X_train_numeric_scaled = scaler.fit_transform(X_train[numeric_features])
+    X_train_numeric_scaled_df = pd.DataFrame(X_train_numeric_scaled, columns=numeric_features, index=X_train.index)
+    
+    # Transform on test data
     X_test_numeric_scaled = scaler.transform(X_test[numeric_features])
-    return X_train_numeric_scaled, X_test_numeric_scaled, numeric_features
+    X_test_numeric_scaled_df = pd.DataFrame(X_test_numeric_scaled, columns=numeric_features, index=X_test.index)
+    
+    return X_train_numeric_scaled_df, X_test_numeric_scaled_df
 
 def encode_categorical_features(X_train, X_test):
-    categorical_features = X_train.select_dtypes(include=['object']).columns
-    encoder = OneHotEncoder(drop='first', sparse=False)
-    X_train_categorical_encoded = encoder.fit_transform(X_train[categorical_features])
-    X_test_categorical_encoded = encoder.transform(X_test[categorical_features])
-
+    # Identify categorical columns
+    categorical_features = X_train.select_dtypes(include=['object', 'category']).columns.tolist()
+    
+    # Initialize OneHotEncoder
+    encoder = OneHotEncoder(sparse=False, handle_unknown='ignore')
+    
+    # Fit and transform on training data
+    encoded_train = encoder.fit_transform(X_train[categorical_features])
+    
+    # Transform on test/validation data
+    encoded_test = encoder.transform(X_test[categorical_features])
+    
+    # Extract feature names for encoded columns
     encoded_feature_names = []
-    for feature in categorical_features:
-        categories = encoder.categories_[categorical_features.get_loc(feature)]
-        encoded_feature_names.extend([f"{feature}_{category}" for category in categories[1:]])
+    for feature, categories in zip(categorical_features, encoder.categories_):
+        encoded_feature_names.extend([f"{feature}_{category}" for category in categories])
+    
+    # Create DataFrames with encoded information
+    encoded_train_df = pd.DataFrame(encoded_train, columns=encoded_feature_names, index=X_train.index)
+    encoded_test_df = pd.DataFrame(encoded_test, columns=encoded_feature_names, index=X_test.index)
+    
+    
+    return encoded_train_df, encoded_test_df
 
-    return X_train_categorical_encoded, X_test_categorical_encoded, encoded_feature_names
-
-def combine_features(X_numeric, X_categorical, numeric_features, encoded_feature_names):
-    X_preprocessed = np.hstack((X_numeric, X_categorical))
-    return pd.DataFrame(X_preprocessed, columns=list(numeric_features) + encoded_feature_names)
-
+def combine_features(X_numeric, X_categorical):
+    X_preprocessed = pd.concat([X_numeric, X_categorical], axis=1)
+    return X_preprocessed
