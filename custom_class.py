@@ -1,11 +1,12 @@
+import numpy as np
+import pandas as pd
+
 from sklearn.model_selection import StratifiedKFold
 from sklearn.base import clone
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from imblearn.over_sampling import RandomOverSampler, SMOTE
 from imblearn.under_sampling import RandomUnderSampler
 from sklearn.metrics import recall_score
-import numpy as np
-import pandas as pd
 
 class CustomCrossValidator:
     
@@ -35,7 +36,11 @@ class CustomCrossValidator:
         
         # Encode categorical features
         encoder = OneHotEncoder(sparse=False, handle_unknown='ignore')
+        
+        # Fit and transform on training data
         X_train_encoded = encoder.fit_transform(X_train[categorical_features])
+        
+        # Encode the validation dataset
         X_val_encoded = encoder.transform(X_val[categorical_features])
         
         # Extract feature names for encoded columns
@@ -54,21 +59,29 @@ class CustomCrossValidator:
         return X_train_preprocessed, X_val_preprocessed
         
     def apply_sampling(self, X_train, y_train):
+        # Check which sampling method is specified and create the appropriate sampler
         if self.sampling_method == 'oversample':
+            # Random oversampling
             sampler = RandomOverSampler(random_state=42)
         elif self.sampling_method == 'undersample':
+            # Random undersampling
             sampler = RandomUnderSampler(random_state=42)
         elif self.sampling_method == 'smote':
+            # Synthetic Minority Over-sampling Technique (SMOTE)
             sampler = SMOTE(random_state=42)
         else:
+            # If no sampling method is specified, return the original data
             return X_train, y_train
-        
+
+        # Apply the sampling method to the training data
         X_resampled, y_resampled = sampler.fit_resample(X_train, y_train)
+
+        # Return the resampled training data
         return X_resampled, y_resampled
     
-    def evaluate_model(self, model, X_train, y_train, X_val, y_val):
+    def evaluate_model(self, X_train, y_train, X_val, y_val):
         # Clone the model to ensure a fresh copy for each fold
-        temp_model = clone(model)
+        temp_model = clone(self.model)
         
         # Apply sampling if specified
         X_train_resampled, y_train_resampled = self.apply_sampling(X_train, y_train)
@@ -99,13 +112,27 @@ class CustomCrossValidator:
                 X_val_preprocessed = X_val_preprocessed[features]
 
             # Evaluate the model
-            metrics = self.evaluate_model(self.model, X_train_preprocessed, y_train, X_val_preprocessed, y_val)
+            metrics = self.evaluate_model(X_train_preprocessed, y_train, X_val_preprocessed, y_val)
             scores.append(metrics)
 
         mean_recall_score = np.mean(scores)
         model_name = self.model.__class__.__name__
-        sampling_method = self.sampling_method
-        self.log[(model_name, features_from, sampling_method)] = mean_recall_score
-
+        self.log[(model_name, features_from, self.sampling_method)] = mean_recall_score
 
         return scores
+    
+    def run_sampling_methods(self, sampling_methods, features=None, features_from=None, folds=5):
+        # Iterate through each sampling method provided
+        for method in sampling_methods:
+            # Set the current sampling method
+            self.sampling_method = method
+
+            # Print the current sampling method to indicate progress
+            print(f"Running cross-validation with sampling method: {method}")
+            print()
+
+            # Run cross-validation with the specified sampling method, features, and number of folds
+            self.cross_validate(features=features, features_from=features_from, folds=folds)
+
+        # Print the log of results after all sampling methods have been processed
+        print("Log:", self.log)
