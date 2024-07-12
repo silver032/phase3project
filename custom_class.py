@@ -9,6 +9,41 @@ from imblearn.under_sampling import RandomUnderSampler
 from sklearn.metrics import recall_score
 from sklearn.model_selection import GridSearchCV
 
+"""
+CustomCrossValidator: A class for cross-validation and evaluation of machine learning models with preprocessing, sampling methods, and grid search.
+
+Attributes:
+    log (dict): A dictionary to store evaluation results keyed by (model_name, features_from, sampling_method).
+    model: A supervised learning estimator implementing `fit` and `predict`.
+    X (DataFrame): The independent variables.
+    y (Series): The target variable.
+    sampling_method (str): Method for handling class imbalance ('none', 'oversample', 'undersample', 'smote').
+    trained_model: The trained model instance after fitting.
+    best_model: The best model selected after grid search.
+
+Methods:
+    __init__(model, X, y, sampling_method='none'):
+        Initializes the cross-validator with a model, feature matrix, target variable, and optional sampling method.
+        
+    preprocess_data(X_train, X_val):
+        Preprocesses numeric and categorical features of training and validation data using StandardScaler and OneHotEncoder.
+        
+    apply_sampling(X_train, y_train):
+        Applies specified sampling method to address class imbalance in training data.
+        
+    evaluate_model(X_train, y_train, X_val, y_val):
+        Evaluates the model on validation data using recall score after preprocessing and optional sampling.
+        
+    cross_validate(features=None, features_from=None, folds=5):
+        Performs the preprocessing of the data in each k-fold cross-validation and evaluates model performance using recall score.
+        
+    run_sampling_methods(sampling_methods, features=None, features_from=None, folds=5):
+        Runs cross-validation with multiple sampling methods, storing results in the log attribute.
+        
+    run_grid_search(param_grid, scoring='recall', cv=5, features=None):
+        Performs grid search over specified parameter grid, evaluating models using recall score and selecting the best model.
+"""
+
 class CustomCrossValidator:
     
     log = {}
