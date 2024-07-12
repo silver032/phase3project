@@ -1,27 +1,33 @@
 ### Overview
+
 This project uses data from Taarifa and the Tanzanian Ministry of Water to predict the functionality of water pumps throughout Tanzania. The dataset includes several variables regarding the type of pump, its installation details, and how it is managed. These variables are crucial for predicting the operational status of the pumps, aiming to categorize them into three functional states.
+
 # Dataset Description
+
 The dataset includes several variables regarding the type of pump, its installation details, and how it is managed. These variables are crucial for predicting the operational status of the pumps, aiming to categorize them into three functional states.
 
 # Business Problem 
+
 The project is commissioned by UN-Water to identify factors that lead to well failures, thereby enhancing water availability and maintenance efficiency across Tanzania.
 
 What impact will it have if we can predict well failures?
-What are some of the leading features that lead to well failure or repair
+What are some of the leading features that lead to well failure or repair?
 What efficiencies can be improved across the Tanzania?
 
 # Goals
-Predictive Analysis: To predict the operational status of water pumps in three categories: functional, needs repair, and non-functional.
+
+Predictive Analysis: To predict the operational status of water pumps in binary categories: Needs Attention, does not need attention. 
 Indicator Analysis: To identify key indicators that lead to well malfunction or the need for repair.
 
 # Key Questions
-1. What preprocessing steps do we need to take to create an effective predictive model?
-2. What encoding techniques are best fit for this?
-3. Which type of predictive model gets the best results?
-4. What hypertuning techniques are used to tune the model?
 
+1. What preprocessing steps do we need to take to create an effective predictive model?
+2. Which type of predictive model gets the best results?
+3. What hypertuning techniques are used to tune the model?
+4. What are the benefits of our model?
 
 # Target Variable Investigation
+
 In the target variable, we started with three classes:
 Functional
 Non-Functional
@@ -49,33 +55,52 @@ Applying appropriate techniques to handle categorical variables. Used OnehotEnco
 ## Predictive Modeling
 
 # Model Selection: 
-Various models were evaluated including Decision Trees and Logistic Regression.
+We evaluated Decision Trees and Logistic Regression as our models
 
 # Model Comparison:
-Performance metrics (like Recall and Accuracy) were compared across different preprocessing strategies and models.
+We focused on recall as our performance metric and compared recall across different preprocessing strategies and models.
 
-## Hyperparameter Tuning
+# Hyperparameter Tuning
 Fine-tuned using grid search techniques to optimize performance, particularly focusing on improving recall to reduce the number of false negatives (functional pumps predicted as non-functional).
 
-### Exploratory Data Analysis 
+## Exploratory Data Analysis 
 
 # Status of wells
 At a top level we wanted to see how what the ratio of working wells vs wells the "Need attention"
+
 ![image1](https://github.com/silver032/phase3project/blob/main/images/image1.png)
 
 We found that there is a larger portion of wells that need attention
 
-# Correlation Matrix
-We ran a correlation on numerical features to see if there are any that needed to be dropped.
 
-![image2](https://github.com/silver032/phase3project/blob/main/images/image2.png)
 
-No numerical categories weren't close to .8, so we kept all numerical features
 
-# Results of Models 
+# Model results 
+
 After running various models, our recall scores showed that decision tree models, with VIF feature selection was our most accurate.
+
 ![image3](https://github.com/silver032/phase3project/blob/main/images/image3.png)
-This represents a baseline model with an accuracy score of .77
+
+- We ran two models with varying feature selection and sampling techniques.
+
+- Dimensionality reduction resulted in poorer scores.
+
+- VIF decision trees were our best models so we hypertuned them.  
+
+# Hypertuned Model Results
+
+![image8](https://github.com/silver032/phase3project/blob/main/images/image8.png)
+
+All models decreased slightly. 
+- Indicative of an overfit model.
+Oversampling vs Undersampling
+- Chose Oversampling as our best model.
+
+
+# Confusion matrix 
+
+![image9](https://github.com/silver032/phase3project/blob/main/images/image2.png)
+
 
 # Map of distirbution of wells
 
@@ -89,18 +114,37 @@ We noticed a higher distribution of wells in certain areas of the country
 
 After hypertuning our model, these variables such as the amount of water, water quanitity and quality, and extraction technique are important for determining well functionality 
 
-# Regional distribution of wells needing attention
+# Recommendation: Regional distribution of wells needing attention
 
-This shows that certain areas of the country have a higher amount of broken wells
+This shows that certain areas of the country have a higher amount of broken wells: Highest concentration in the northeast and southwest of the country
 
 ![image6](https://github.com/silver032/phase3project/blob/main/images/image6.png)
 
-# Extraction technique 
-
-This shows that gravity wells need the most attention
+# Recommendation: Extraction technique 
 
 ![image7](https://github.com/silver032/phase3project/blob/main/images/image7.png)
 
-## Conclusions
+While counterintuitive, it appears as though the construction quality and materials used could be playing a role here. 
 
+Gravity pumps should have fewer issues but are the most common extraction technique.  
+
+# Predictive Recommendation: 
+
+All data provided was surveyed by GeoData Consultants Ltd. Our prediction model can be used in place of consultants, cutting costs.
+
+Benefit of the model
+- Can assist in efficient resource allocation and proactive maintenance planning.
+-- Note
+--- The model is based on historic results, will not be apt for use during natural disasters but can be used before-hand to identify high priority regions.
+
+
+# Next Steps
+
+Additional data cleaning
+- Better grouping of the data
+- Test different encoding techniques on categorical data
+More feature selection techniques 
+Additional classification models
+- Naive Bayes
+More robust hyperparameter tuning
 
