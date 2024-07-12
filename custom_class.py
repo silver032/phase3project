@@ -7,6 +7,7 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from imblearn.over_sampling import RandomOverSampler, SMOTE
 from imblearn.under_sampling import RandomUnderSampler
 from sklearn.metrics import recall_score
+from sklearn.model_selection import GridSearchCV
 
 class CustomCrossValidator:
     
@@ -17,6 +18,8 @@ class CustomCrossValidator:
         self.X = X
         self.y = y
         self.sampling_method = sampling_method
+        self.trained_model = None
+        self.best_model = None
         
     def preprocess_data(self, X_train, X_val):
         # Identify numeric and categorical features
@@ -89,6 +92,9 @@ class CustomCrossValidator:
         # Fit the model on the resampled training data
         temp_model.fit(X_train_resampled, y_train_resampled)
         
+        # Store trained model
+        self.trained_model = temp_model
+        
         # Evaluate the model on validation data using recall score
         y_pred = temp_model.predict(X_val)
         metrics = recall_score(y_val, y_pred)
@@ -136,3 +142,49 @@ class CustomCrossValidator:
 
         # Print the log of results after all sampling methods have been processed
         print("Log:", self.log)
+        
+    def run_grid_search(self, param_grid, scoring='recall', cv=5, features=None):
+        # Initialize GridSearchCV
+        grid_search = GridSearchCV(estimator=self.model, param_grid=param_grid, scoring=scoring, cv=cv, verbose=1, n_jobs=-1)
+
+        # Initialize empty lists to store results
+        scores = []
+        best_models = []
+
+        for train_idx, val_idx in grid_search.cv.split(self.X, self.y):
+            X_train, X_val = self.X.iloc[train_idx], self.X.iloc[val_idx]
+            y_train, y_val = self.y.iloc[train_idx], self.y.iloc[val_idx]
+            
+            # Preprocess data
+            X_train_preprocessed, X_val_preprocessed = self.preprocess_data(X_train, X_val)
+            
+            # Apply sampling if specified (if needed)
+            if self.sampling_method is not None:
+                X_resampled, y_resampled = self.apply_sampling(X_train_preprocessed, y_train)
+            else:
+                X_resampled, y_resampled = X_train_preprocessed, y_train
+
+            # Fit GridSearchCV on preprocessed data
+            grid_search.fit(X_resampled, y_resampled)
+
+            # Evaluate on validation set
+            y_pred = grid_search.best_estimator_.predict(X_val_preprocessed)
+            score = recall_score(y_val, y_pred)
+
+            # Store results
+            scores.append(score)
+            best_models.append(grid_search.best_estimator_)
+
+        # Print mean score
+        mean_score = np.mean(scores)
+        print(f'Mean Recall Score: {mean_score}')
+
+        # Find best model based on validation scores
+        best_model_idx = np.argmax(scores)
+        self.best_model = best_models[best_model_idx]
+
+        # Print best parameters and best score found during grid search
+        print(f'Best parameters: {grid_search.best_params_}')
+        print(f'Best score: {grid_search.best_score_}')
+
+        return grid_search
